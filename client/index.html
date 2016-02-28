@@ -1,0 +1,136 @@
+<html ng-app="mymean_app">
+<head>
+  <title>Welcome to the MEAN</title>
+  <!-- require angular -->
+<style>
+#bar_graph{
+  height:40px;
+  width:600px;
+  border: 2px solid black;
+  margin-top:100px;
+}
+#salary_bar{
+  height:38px;
+  background-color:green;
+  animation-duration: 3s;
+  animation-name: slidein;
+  animation-iteration-count: 1;
+  animation-direction: alternate;
+}
+#bar_graph_inner{
+  height:40px;
+  width: 400px;
+}
+@keyframes slidein {
+  from {
+    width:0%;
+  }
+  
+  to {
+    width:100%;
+  }
+}
+</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+  </head>
+  <script type="text/javascript" src="/static/angular.min.js"></script>
+<link rel="stylesheet" href="/static/style/autocomplete.css">
+<script type="text/javascript" src="/static/script/autocomplete.js"></script>
+<script type="text/javascript" src="/static/script/app.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/css/bootstrap-select.min.css">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/js/bootstrap-select.min.js"></script>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+  <script>
+  // Lets create our angular module
+var mymean_app = angular.module('mymean_app', ['autocomplete']);
+// Now lets create a controller with some hardcoded data!
+mymean_app.controller('mymeanController', function($scope, mymeanFactory) {
+mymeanFactory.colleges(function(data){
+  $scope.colleges = data;
+}) 
+$scope.salarydata = function(){
+  mymeanFactory.salarydata($scope.userdata, function(data){
+    console.log(data);
+    if(data != 0){
+      $scope.error = "";
+    $scope.percentile = data;
+    $scope.width = $scope.percentile * 6;
+    $scope.checked = true;
+    $scope.myStyle={'width': $scope.width + 'px'}
+  }
+  else{
+    $scope.error = "Sorry, we weren't able to find any data with the information you entered. Please try again."
+  }
+    $scope.userdata = {};
+  })
+}
+$scope.example = "nyaaaah";
+})
+// create the FriendFactory
+mymean_app.factory('mymeanFactory', function($http) {
+  var factory = {};
+    factory.colleges = function(callback){
+      $http.get('/colleges').success(function(output){
+        colleges = output;
+        callback(colleges);
+      })
+    },
+    factory.salarydata = function(info, callback){
+      $http.post('/salarydata', info).success(function(output){
+        colleges = output;
+        callback(colleges);
+      })
+    }
+  return factory;
+});
+  </script>
+
+</head>
+<body ng-controller="mymeanController">
+  <div class="container">
+
+<div class="col-md-8 col-sm-offset-2">
+  <div class="jumbotron">
+            <h1>Hello, internet!</h1>
+            <p>This app will tell you what percentile of salary earnings you fall into compared to other people who studied at your university. Data comes from <a href="https://collegescorecard.ed.gov/data/">The College Scorecard Open Data Set</a> published by US Department of Education.</p>
+          </div>
+        </div>
+ <div class="col-md-6 col-sm-offset-3">
+  <h4>What year did you enroll in college?</h4>
+         <select ng-model="userdata.enrollment_year" id="enrollment" class="selectpicker">
+  <option value="2001">2001</option>
+  <option value="2003">2003</option>
+  <option value="2005" selected="true">2005</option>
+ </select>
+
+ <input type="text" ng-model="userdata.salary" placeholder="Yearly salary?" class="form-control">
+  <autocomplete ng-model="userdata.my_college" attr-placeholder="What college did you go to?" data="colleges"></autocomplete>
+  <button class="btn btn-lg btn-success" ng-click="salarydata()">Rank me!</button>
+  </div>
+  <div class="col-md-8 col-sm-offset-2">
+    <h3>{{error}}</h3>
+    
+    <div id="bar_graph" ng-show="checked">
+      <div id="bar_graph_inner" ng-style="myStyle">
+      <div id="salary_bar">
+      </div>
+      <h3>Your salary falls into the {{percentile}}th percentile for the data you entered</h3>
+      </div>
+    </div>
+  </div>
+  </div>
+</body>
+</html>
