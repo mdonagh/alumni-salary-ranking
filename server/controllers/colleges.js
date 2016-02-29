@@ -25,6 +25,7 @@ module.exports = (function() {
          console.log(err);
                 }
               })
+        req.body.salary = req.body.salary.replace(",", "");
     College.find({INSTNM: req.body.my_college}, function (err, my_college){
       if(my_college[0] === undefined){
         res.json(0);
